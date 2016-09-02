@@ -1,0 +1,59 @@
+stages:
+  - dependencies
+  - build
+  - test
+
+cache:
+  paths:
+    - lib
+    - imageutilities/lib
+    - gpuNUFFT/CUDA/bin
+
+before_script:
+  - export COMPUTE_CAPABILITY="5.2"
+  - export IMAGEUTILITIES_ROOT=`pwd`/imageutilities/
+  - export CUDA_SDK_ROOT_DIR="/usr/local/cuda/samples/"
+  - export GPUNUFFT_ROOT_DIR=`pwd`/gpuNUFFT/
+  - git submodule sync --recursive
+  - git submodule update --init --recursive --remote
+  - apt-get update
+  - apt-get install python-numpy --yes --no-install-recommends
+
+imageutilites-build:
+  tags:
+    - ubuntu-16.04,cuda-8.0
+  stage: dependencies
+  script:
+    - rm -r imageutilities/build/*
+    - cd imageutilities/build
+    - cmake .. -DWITH_PYTHON=ON
+    - make
+    - make install 
+
+gpunufft-build:
+  tags:
+    - ubuntu-16.04,cuda-8.0
+  stage: dependencies
+  script:
+    - rm -r gpuNUFFT/CUDA/build/*
+    - cd gpuNUFFT/CUDA/build
+    - cmake .. -DGEN_MEX_FILES=OFF
+    - make
+
+pdtoolbox16-build:
+  tags:
+    - ubuntu-16.04,cuda-8.0
+  stage: build
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -DWITH_GPUNUFFT=ON
+    - make
+
+pdtoolbox16-pythonTest:
+  tags:
+    - ubuntu-16.04,cuda-8.0
+  stage: test
+  script:
+    - cp lib/*.so primaldualtoolbox
+    - python -c "import primaldualtoolbox; print('Importing primaldualtoolbox done');"

@@ -1,0 +1,6 @@
+[submodule "imageutilities"]
+	path = imageutilities
+	url = https://github.com/VLOGroup/imageutilities.git
+[submodule "gpuNUFFT"]
+	path = gpuNUFFT
+	url = https://github.com/andyschwarzl/gpuNUFFT.git
