@@ -49,7 +49,7 @@ Installation
 
 To build the primal-dual toolbox including the dependencies, simply perform the following steps:
 
-- **ImageUtilities** (requires `libboost-python, libopenexr-dev`)
+- **ImageUtilities** (requires `libboost-python, libopenexr-dev, libeigen3-dev`)
   ~~~
   $ cd imageutilities/build
   $ cmake .. -DWITH_PYTHON=ON -DWITH_MATLAB=ON
