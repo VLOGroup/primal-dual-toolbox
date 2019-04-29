@@ -94,14 +94,14 @@ PyObject* adjoint(bp::object& self, bp::object& py_arr)
 
 #ifdef WITH_GPUNUFFT
 /** Define custom operator init for MriRadialOperator, taking a dict as input */
-template<typename DataType2c, typename DataType3c>
-std::shared_ptr<MriRadialOperator<DataType2c, DataType3c>> MriRadialOperator_Init(const bp::object & pyconfig)
+template<template <typename, typename> class TOperator, typename TInput, typename TOutput>
+std::shared_ptr<TOperator<TInput, TOutput> > MriRadialOperator_Init(const bp::object & pyconfig)
 {
   OpConfigDict config;
   mapFromPyObject(pyconfig, config);
 
   // Initialize op
-  std::shared_ptr<MriRadialOperator<DataType2c, DataType3c> > op(new MriRadialOperator<DataType2c, DataType3c>(config));
+  std::shared_ptr<TOperator<TInput, TOutput> > op(new TOperator<TInput, TOutput>(config));
   return op;
 }
 #endif
@@ -167,13 +167,22 @@ BOOST_PYTHON_MODULE(pymrireconstruction)  // name must (!) be the same as the re
   bp::class_<MriRadialOperator<DataType2c, DataType2c>,
       std::shared_ptr<MriRadialOperator<DataType2c, DataType2c>>,
       boost::noncopyable>("MriRadialOperator", bp::no_init)
-      .def("__init__", bp::make_constructor(&MriRadialOperator_Init<DataType2c, DataType2c>))
+      .def("__init__", bp::make_constructor(&MriRadialOperator_Init<MriRadialOperator, DataType2c, DataType2c>))
       .def(bp::self_ns::str(bp::self))  // allow debug printing
       .def("setTrajectory", setMask<MriRadialOperator, DataType2c, DataType2c>)
       .def("setDcf", setMask<MriRadialOperator, DataType2c, DataType2c>)
       .def("setCoilSens", setCoilSens<MriRadialOperator, DataType2c, DataType2c>)
       .def("forward", forward<MriRadialOperator, DataType2c, DataType2c>)
       .def("adjoint", adjoint<MriRadialOperator, DataType2c, DataType2c>);
+  bp::class_<MriRadialSinglecoilOperator<DataType2c, DataType2c>,
+      std::shared_ptr<MriRadialSinglecoilOperator<DataType2c, DataType2c>>,
+      boost::noncopyable>("MriRadialSinglecoilOperator", bp::no_init)
+      .def("__init__", bp::make_constructor(&MriRadialOperator_Init<MriRadialSinglecoilOperator, DataType2c, DataType2c>))
+      .def(bp::self_ns::str(bp::self))  // allow debug printing
+      .def("setTrajectory", setMask<MriRadialSinglecoilOperator, DataType2c, DataType2c>)
+      .def("setDcf", setMask<MriRadialSinglecoilOperator, DataType2c, DataType2c>)
+      .def("forward", forward<MriRadialSinglecoilOperator, DataType2c, DataType2c>)
+      .def("adjoint", adjoint<MriRadialSinglecoilOperator, DataType2c, DataType2c>);
 #endif
 
   // Sampling MRI operator
@@ -224,6 +233,7 @@ BOOST_PYTHON_MODULE(pymrireconstruction)  // name must (!) be the same as the re
       .def("setInput0", setOptimizerInput0<TgvMriOptimizer, DataType2c, DataType2c>)
 #ifdef WITH_GPUNUFFT
       .def("setOperator", setOptimizerOperator<TgvMriOptimizer, MriRadialOperator, DataType2c, DataType2c>)
+      .def("setOperator", setOptimizerOperator<TgvMriOptimizer, MriRadialSinglecoilOperator, DataType2c, DataType2c>)
 #endif
       .def("setOperator", setOptimizerOperator<TgvMriOptimizer, MriSamplingOperator, DataType2c, DataType2c>)
       .def("solve", &TgvMriOptimizer<DataType2c, DataType2c>::solve, solve_optimizer_overloads())
@@ -236,6 +246,7 @@ BOOST_PYTHON_MODULE(pymrireconstruction)  // name must (!) be the same as the re
       .def("setNoisyData", setNoisyOptimizerData<TgvOptimizerWithOp, DataType2c, DataType2c>)
 #ifdef WITH_GPUNUFFT
       .def("setOperator", setOptimizerOperator<TgvOptimizerWithOp, MriRadialOperator, DataType2c, DataType2c>)
+      .def("setOperator", setOptimizerOperator<TgvOptimizerWithOp, MriRadialSinglecoilOperator, DataType2c, DataType2c>)
 #endif
       .def("setOperator", setOptimizerOperator<TgvOptimizerWithOp, MriSamplingOperator, DataType2c, DataType2c>)
       .def("solve", &TgvOptimizerWithOp<DataType2c, DataType2c>::solve, solve_optimizer_overloads())
@@ -248,6 +259,7 @@ BOOST_PYTHON_MODULE(pymrireconstruction)  // name must (!) be the same as the re
       .def("setNoisyData", setNoisyOptimizerData<TvOptimizerWithOp, DataType2c, DataType2c>)
 #ifdef WITH_GPUNUFFT
       .def("setOperator", setOptimizerOperator<TvOptimizerWithOp, MriRadialOperator, DataType2c, DataType2c>)
+      .def("setOperator", setOptimizerOperator<TvOptimizerWithOp, MriRadialSinglecoilOperator, DataType2c, DataType2c>)
 #endif
       .def("setOperator", setOptimizerOperator<TvOptimizerWithOp, MriSamplingOperator, DataType2c, DataType2c>)
       .def("solve", &TvOptimizerWithOp<DataType2c, DataType2c>::solve, solve_optimizer_overloads())

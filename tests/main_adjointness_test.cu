@@ -94,6 +94,32 @@ void testMriRadialOperator()
 #endif
 }
 
+void testMriRadialSinglecoilOperator()
+{
+#ifdef WITH_GPUNUFFT
+  // Setup config parameters
+  OpConfigDict config;
+  config["img_dim"] = "256";
+  config["osf"] = "2";
+  config["kernel_width"] = "3";
+  config["sector_width"] = "5";
+
+  // Constants
+  iu::LinearHostMemory<float, 2> h_trajectory({256*64, 2});
+  iu::LinearHostMemory<float, 2> h_dcf({256*64, 1});
+
+  iu::random::fillRandomFloatingNumbers(h_trajectory);
+  iu::random::fillRandomFloatingNumbers(h_dcf);
+
+  // Create operator & check adjointness
+  MriRadialSinglecoilOperator<iu::LinearDeviceMemory<float2, 2>, iu::LinearDeviceMemory<float2, 2>> op(config);
+  op.addConstant(h_trajectory);
+  op.addConstant(h_dcf);
+  op.adjointnessCheck();
+#endif
+}
+
+
 int main(int argc, char *argv[])
 {
   std::cout << "*****************************" << std::endl;
@@ -104,5 +130,6 @@ int main(int argc, char *argv[])
   testMriCartesianRemoveROOSOperator();
   testMriSamplingOperator();
   testMriRadialOperator();
+  testMriRadialSinglecoilOperator();
   return 0;
 }
